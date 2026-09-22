@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>CAFÉ DE L'OBSCURITÉ</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #141517;
+      color: #8a929e;
+      font-family: "Georgia", "Times New Roman", serif;
+      font-size: 11px;
+      line-height: 1.5;
+      display: flex;
+      justify-content: center;
+      width: 100%;
+      overflow-x: hidden;
+    }
+
+    #page-wrapper {
+      width: 100%;
+      max-width: 960px;
+      background-color: #1a1b1e;
+      border-left: 1px solid #282a2f;
+      border-right: 1px solid #282a2f;
+      box-sizing: border-box;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 自動フェードアウト ポップアップ */
+    #overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.92);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      padding: 15px;
+      box-sizing: border-box;
+      opacity: 1;
+      transition: opacity 1.2s ease-out;
+    }
+
+    #overlay.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .modal-content {
+      background: #141517;
+      border: 1px solid #33373e;
+      padding: 40px 24px;
+      text-align: center;
+      width: 100%;
+      max-width: 420px;
+      box-sizing: border-box;
+      color: #8e95a2;
+      box-shadow: 0 0 25px rgba(0, 0, 0, 0.8);
+    }
+
+    .modal-content h1 {
+      font-size: 22px;
+      color: #bcc4d1;
+      margin-top: 0;
+      margin-bottom: 12px;
+      letter-spacing: 1.8px;
+      font-weight: normal;
+    }
+
+    /* ヘッダー */
+    header {
+      padding: 16px 15px 12px 15px;
+      border-bottom: 1px solid #282a2f;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand-title {
+      font-size: 14px;
+      letter-spacing: 1px;
+      color: #bcc4d1;
+      text-decoration: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .sub-title {
+      font-size: 9px;
+      color: #69707c;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ページ表示制御 */
+    .view-page {
+      display: none;
+      flex: 1;
+    }
+
+    .view-page.active {
+      display: block;
+    }
+
+    /* ホーム画面 3カラムレイアウト */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 28% 44% 28%;
+      gap: 8px;
+      padding: 15px 10px;
+      box-sizing: border-box;
+    }
+
+    /* 下層ページ専用レイアウト */
+    .subpage-container {
+      padding: 20px 15px 40px 15px;
+      display: grid;
+      grid-template-columns: 24% 76%;
+      gap: 12px;
+      box-sizing: border-box;
+    }
+
+    .subpage-main {
+      border-left: 1px solid #282a2f;
+      padding-left: 14px;
+    }
+
+    h2 {
+      font-size: 11px;
+      margin-top: 0;
+      color: #b0b8c4;
+      border-bottom: 1px solid #282a2f;
+      padding-bottom: 4px;
+      letter-spacing: 0.5px;
+      font-weight: normal;
+    }
+
+    p {
+      margin-bottom: 10px;
+      text-align: justify;
+      word-break: break-word;
+    }
+
+    /* 画像ラッパー（ホームのみ） */
+    .image-container {
+      width: 100%;
+      background-color: #141517;
+      border: 1px solid #282a2f;
+      margin-bottom: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .image-container img {
+      width: 100%;
+      display: block;
+      object-fit: cover;
+      filter: grayscale(40%) brightness(0.85) contrast(0.95);
+    }
+
+    .image-caption {
+      font-size: 8px;
+      color: #5c626e;
+      padding: 3px 4px;
+      background-color: #111214;
+      border-top: 1px solid #222428;
+      text-align: left;
+      letter-spacing: 0.3px;
+    }
+
+    /* メニュー専用スタイル（文字ギッシリ・写真なし） */
+    .menu-item {
+      margin-bottom: 16px;
+      border-bottom: 1px dashed #282a2f;
+      padding-bottom: 12px;
+    }
+
+    .menu-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 4px;
+    }
+
+    .menu-name {
+      font-size: 11px;
+      font-weight: bold;
+      color: #a6afbc;
+    }
+
+    .menu-price {
+      font-size: 11px;
+      color: #8c93a0;
+      font-family: monospace;
+    }
+
+    .menu-desc {
+      font-size: 9.5px;
+      line-height: 1.5;
+      color: #787f8b;
+      margin: 0;
+      text-align: justify;
+    }
+
+    /* 枠線付きボタン */
+    .action-btn {
+      display: inline-block;
+      padding: 3px 7px;
+      font-size: 10px;
+      font-family: inherit;
+      color: #9ea6b3;
+      background-color: #202226;
+      border: 1px solid #3c414a;
+      border-radius: 3px;
+      text-decoration: none;
+      cursor: pointer;
+      line-height: 1.2;
+      vertical-align: middle;
+      transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+    }
+
+    .action-btn:hover {
+      background-color: #2b2e34;
+      border-color: #585f6c;
+      color: #d8deea;
+    }
+
+    /* フッター */
+    footer {
+      border-top: 1px solid #282a2f;
+      background-color: #141517;
+      padding: 20px 15px 40px 15px;
+      font-size: 10px;
+      color: #727985;
+      line-height: 1.8;
+      margin-top: auto;
+    }
+
+    .placeholder-body {
+      padding: 20px;
+      background: #151618;
+      border: 1px dashed #2a2d33;
+      color: #6a717d;
+      font-style: italic;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 初回ポップアップ -->
+  <div id="overlay">
+    <div class="modal-content">
+      <h1>CAFÉ DE L'OBSCURITÉ</h1>
+      <p style="font-size: 11px; color: #a4abb8; margin-bottom: 8px;">AUTHENTIC COFFEE & SILENT ROASTERY</p>
+      <p style="font-size: 9px; color: #6f7580;">(System Initializing / しばらくお待ちください)</p>
+    </div>
+  </div>
+
+  <div id="page-wrapper">
+
+   <!-- 共通ヘッダー -->
+    <header style="flex-direction: column; align-items: stretch; gap: 8px; padding: 12px 15px 12px 15px;">
+      <!-- 架空サイト告知バナー（控えめな注記） -->
+      <div style="background-color: #121315; border: 1px dashed #2d3138; padding: 4px 8px; text-align: center; font-size: 8.5px; color: #727985; letter-spacing: 0.5px;">
+        ※このWebサイトは架空のWebサイトです / FICTITIOUS EXPERIMENTAL INTERFACE
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <span class="brand-title" onclick="switchPage('home')">CAFÉ DE L'OBSCURITÉ</span>
+          <div class="sub-title">EST. 2011 — ARTISANAL COFFEE ROASTERY</div>
+        </div>
+        <div class="sub-title" id="header-status">
+          <span>STATUS: LIVE</span>
+          <!-- 【枠線ボタン1：お知らせ】 -->
+          <button class="action-btn" onclick="switchPage('news')">Notice Bulletins [News]</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ================= 1. ホーム画面 ================= -->
+    <main id="page-home" class="view-page active">
+      <div class="main-grid">
+
+        <!-- 左カラム -->
+        <aside>
+          <div class="image-container">
+            <img src="https://encrypted-tbn0.gstatic.com/licensed-image?q=tbn:ANd9GcSyW1NKamCIrxBSchC2Brwx48vk2OAyeVg53U_83eNNJkzngAWB8xKstwkEinNt4g8bcRMF9Ivl4tpDJBc" alt="Interior" style="height: 85px;">
+            <div class="image-caption">[ Fig 1. Chamber Atmosphere — 2011 Archive ]</div>
+          </div>
+          <h2>Our Heritage & Genesis</h2>
+          <p>
+            Founded in the autumn of 2011 within a disused subterranean basement, CAFÉ DE L'OBSCURITÉ originated from an aesthetic rejection of mass-market coffee culture. The founder sought to restore the ceremonial tranquility once inherent to European salon coffeehouses.
+          </p>
+          <p>
+            Over the past fifteen years, our space has served as an acoustic refuge for authors, philosophers, and architectural designers seeking intense focus amidst absolute darkness. To protect this fragile auditory silence, our private chambers operate on an advance schedule.
+            <button class="action-btn" style="margin: 4px 0;" onclick="switchPage('reservation')">
+              Chamber Protocol [Reservation]
+            </button>
+            remains mandatory for all afternoon table allocations.
+          </p>
+          <p>
+            創業以来変わらぬ静寂と、一杯の抽出に注ぐ哲学を継承しています。
+          </p>
+        </aside>
+
+        <!-- 中央カラム -->
+        <section>
+          <div class="image-container">
+            <img src="https://encrypted-tbn2.gstatic.com/licensed-image?q=tbn:ANd9GcQG0ob8PUlSA3oqkkt_WMBySLvrrYXV-waDS10zRWtt1r84LgRinjFFZkpmAgmj7lVJVyjztUlEtxITR-c" alt="Roaster" style="height: 130px;">
+            <div class="image-caption">[ Fig 2. Restored Cast-Iron Roaster Assembly ]</div>
+          </div>
+          <h2>Micro-Batch Roasting Discipline</h2>
+          <p>
+            Our roasting discipline revolves around a restored 1968 cast-iron drum roaster, relying entirely on indirect conductive thermal conduction rather than forced convective hot air. This prolonged, gradual roasting profile allows the bean’s cellular cellulose to expand without charring the delicate external epidermis.
+          </p>
+          <p>
+            Every single batch is limited to precisely 2.4 kilograms to guarantee micro-climatic control inside the drum. Roasting masters track the crack acoustically, noting the subtle variance in pitch as internal moisture evaporates into vapor.
+          </p>
+          <p>
+            Direct heat application is severed 40 seconds prior to termination, allowing ambient thermal momentum to mature the Maillard compounds. The resulting cup yields an unprecedented density of dark chocolate notes, molasses viscosity, and virtually zero acrid astringency. 豆の芯まで均一に火を通し、雑味のない重厚な余韻を引き出します。
+          </p>
+        </section>
+
+        <!-- 右カラム -->
+        <aside>
+          <h2>Botanical Origins & Cultivars</h2>
+          <p>
+            We curate exclusively shade-grown heirloom varietals cultivated at altitudes exceeding 1,850 meters:
+          </p>
+          <p>
+            <strong>• Ethiopia Yirgacheffe Heirloom:</strong> Natural process. Floral jasmine nose with a bergamot undertone.
+          </p>
+          <p>
+            <strong>• Guatemala Antigua Bourbon:</strong> Volcanic pumice soil. Notes of dark plum, walnut, and smoked cedar.
+          </p>
+          <div class="image-container">
+            <img src="https://encrypted-tbn0.gstatic.com/licensed-image?q=tbn:ANd9GcR7t0d6r22zJhnQ6KpY--d8-4d1oJX5Y25PHVQB2rN0loGgWTs1Hdbuu7uKOOHQeErp2sfJKyA3ZLb7uTo" alt="Beans" style="height: 70px;">
+            <div class="image-caption">[ Fig 3. Pre-Roast Sorting Protocol ]</div>
+          </div>
+          <p>
+            <strong>• Mandheling Typica:</strong> Wet-hulled Sumatra. Deep earthy tobacco and herbal licorice body.
+          </p>
+          <p>
+            Our seasonal single-origin beans and roasting utensils are indexed under
+            <button class="action-btn" style="margin: 4px 0;" onclick="switchPage('goods')">
+              Artifacts Registry [Goods]
+            </button>.
+          </p>
+        </aside>
+
+      </div>
+    </main>
+
+    <!-- ================= 2. メニュー専用ページ（全日本語・長文解説・写真なし） ================= -->
+    <div id="page-menu" class="view-page">
+      <div class="subpage-container">
+        <aside>
+          <h2>献立概要目録</h2>
+          <p style="font-size: 9.5px; color: #737b87;">
+            当館が提供するすべての珈琲および甘味・軽食は、空間の静寂と感覚の調和を損なわないよう、独自の調合規準に基づき設計されています。抽出温度や焼き上がりの時間管理を徹底しているため、ご注文から提供まで少々お時間をいただいております。
+          </p>
+        </aside>
+        <section class="subpage-main">
+          <h2>お品書き一覧（詳細解説）</h2>
+
+          <!-- 1. オリジナルブレンド -->
+          <div class="menu-item">
+            <div class="menu-header">
+              <span class="menu-name">オリジナルブレンド</span>
+              <span class="menu-price">700円</span>
+            </div>
+            <p class="menu-desc">
+              当館の創業当初より変わらぬ配合比率を守り続けている基幹の深煎りブレンドです。グアテマラの古樹ブルボン種を主軸に、エチオピアのナチュラル精製豆を隠し味として絶妙に配合。鋳鉄焙煎機でじっくりと芯まで熱を浸透させることで、カカオ分80%のビターチョコレートのような重厚なコクと、喉を通った後に静かに立ち上るカラメルの甘い余韻を実現しました。ネルドリップ特有の滑らかな舌触りとともに、時間の経過による温度変化で現れる繊細な風味の移ろいをお楽しみいただけます。
+            </p>
+          </div>
+
+          <!-- 2. カフェモカ -->
+          <div class="menu-item">
+            <div class="menu-header">
+              <span class="menu-name">カフェモカ</span>
+              <span class="menu-price">800円</span>
+            </div>
+            <p class="menu-desc">
+              極限まで濃度を高めたダブルショットのエスプレッソに、オランダ産の無糖クーベルチュールチョコレートと、低温殺菌で仕上げた濃厚なスチームミルクを贅沢に融合させました。表面には微細なココアパウダーを薄く散らし、一口目からエスプレッソの芳醇な苦味とカカオ特有の上品な甘みが心地よく調和します。過度な糖分を控えることで、甘さの中に豆本来のロースト香が際立つ、大人のためのデザート感覚の温かい一杯です。
+            </p>
+          </div>
+
+          <!-- 3. エスプレッソ -->
+          <div class="menu-item">
+            <div class="menu-header">
+              <span class="menu-name">エスプレッソ</span>
+              <span class="menu-price">750円</span>
+            </div>
+            <p class="menu-desc">
+              9気圧の高圧と92℃の熱湯を用い、25秒間という極めて短い刹那で一滴一滴抽出した原液のエッセンスです。カップの上部を厚く覆う黄金色のクレマは豆の鮮度と的確なタンピングの証であり、口に含んだ瞬間に凝縮された力強いボディとドライフルーツを思わせる濃密な酸味が広がります。抽出直後の最も香りが立つ瞬間にお召し上がりいただくことを前提とし、砂糖を一さじ落として底に沈む濃厚なクレマと混ぜ合わせていただくのもおすすめです。
+            </p>
+          </div>
+
+          <!-- 4. ウインナーコーヒー -->
+          <div class="menu-item">
+            <div class="menu-header">
+              <span class="menu-name">ウインナーコーヒー</span>
+              <span class="menu-price">900円</span>
+            </div>
+            <p class="menu-desc">
+              ウィーンの伝統的なサロン様式を再現した格調高い一杯です。深煎りの力強いブレンドコーヒーの上に、動物性脂肪分45%の極めて濃度の高い生クリームを手作業でゆるやかに泡立ててたっぷりと浮かべました。熱々のブラックコーヒーが冷たく滑らかなクリームの層を潜り抜けて口腔へと滑り込む温度差の快感、そしてクリームが徐々に溶け出してマイルドなカフェオレへと変化していく味わいのグラデーションをご堪能いただけます。
+            </p>
+          </div>
+
+          <!-- 5. アイスコーヒー -->
+          <div class="menu-item">
+            <div class="menu-header">
+              <span class="menu-name">アイスコーヒー</span>
+              <span class="menu-price">680円</span>
+            </div>
+            <p class="menu-desc">
+              マンデリンを主体とした極深煎り豆を用い、点滴抽出法によって8時間もの歳月をかけて常温水で一滴ずつ抽出した極上の水出し珈琲です。急冷式では決して出せない、角の取れた丸みのある口当たりと、麦芽や黒糖を思わせる深く澄んだ香味が特徴です。氷には純度の高い良質な氷塊を使用しているため、溶け出しても水っぽくなりにくく、最後の一滴まで濃厚で透明感のある冷涼なコクを損なうことなくじっくりと味わっていただけます。
+            </p>
+          </div>
+
+          <!-- 6. シフォンケーキ -->
+          <div class="menu-item">
+            <div class="menu-header">
+              <span class="menu-name">シフォンケーキ</span>
+              <span class="menu-price">820円</span>
+            </div>
+            <p class="menu-desc">
+              毎朝当館の厨房で焼き上げる、絹のような軽やかな気泡と驚くほどの弾力を誇る手作りシフォンケーキです。国産小麦粉と新鮮な平飼い有精卵のみを使用し、ベーキングパウダーなどの膨張剤を一切使わずに卵白の気泡力だけで限界までふんわりと立ち上げました。生地にはすり潰した珈琲豆の微粉末を練り込んでおり、噛むほどに優しい甘みと微かな焙煎香が漂います。甘さを極限まで抑えた無糖のホイップクリームを添えてご提供いたします。
+            </p>
+          </div>
+
+          <!-- 7. フォンダンショコラ -->
+          <div class="menu-item">
+            <div class="menu-header">
+              <span class="menu-name">フォンダンショコラ</span>
+              <span class="menu-price">950円</span>
+            </div>
+            <p class="menu-desc">
+              最高級のフランス産ヴァローナ社製ブラックチョコレートをふんだんに生地に練り込み、オーダーをいただいてから天火オーブンで中心温度を厳密に管理しながら焼き上げます。フォークを入れると、外側のほろ苦いスポンジの中から熱々のガナッシュがとろりとあふれ出します。濃厚なカカオの油分とフルーティーな酸味が、当館の深煎りブレンドやエスプレッソの持つ苦味と完璧な相乗効果を生み出す、贅沢の極致とも言える温かいショコラです。
+            </p>
+          </div>
+
+          <!-- 8. ホットドック -->
+          <div class="menu-item">
+            <div class="menu-header">
+              <span class="menu-name">ホットドック</span>
+              <span class="menu-price">1000円</span>
+            </div>
+            <p class="menu-desc">
+              天然酵母を用いてじっくり発酵させたハード系の自家製セミフランスパンに、天然羊腸を使用した肉厚の粗挽きポークソーセージを挟み込んだ本格派の軽食です。パンの表面をパリッと香ばしく焼き上げ、ソーセージを噛んだ瞬間に弾けるジューシーな肉汁を受け止めます。アクセントとして自家製のザワークラウト（乳酸発酵キャベツ）とフランス産ディジョンマスタードをたっぷり添えており、肉の旨味を爽やかな酸味で引き締めます。
+            </p>
+          </div>
+
+          <!-- 9. ハンバーガー -->
+          <div class="menu-item">
+            <div class="menu-header">
+              <span class="menu-name">ハンバーガー</span>
+              <span class="menu-price">1200円</span>
+            </div>
+            <p class="menu-desc">
+              豪州産牛肩ロースの粗挽き肉を手捏ねで成形し、鉄板で表面を強火で焼き固めて旨味を閉じ込めた極厚150gのビーフパティが主役です。バターの風味豊かな自家製ブリオッシュバンズで、新鮮なフリルレタス、厚切りの完熟トマト、じっくり飴色になるまで炒めたオニオンソテーとともにサンドしました。ソースは赤ワインとフォンドボーを煮詰めた深みのある特製デミグラスソースを使用しており、満足感の高い一皿に仕上がっています。
+            </p>
+          </div>
+
+          <!-- 10. ポテト（追加） -->
+          <div class="menu-item">
+            <div class="menu-header">
+              <span class="menu-name">ポテト</span>
+              <span class="menu-price">450円</span>
+            </div>
+            <p class="menu-desc">
+              北海道産銘柄じゃがいもを皮付きのまま厚切りにし、低温のオリーブオイルでじっくり中まで甘みを引き出した後、高温の植物油で二度揚げすることで外側をカリッとクリスピーに仕上げました。噛み締めるたびにホクホクとした芋本来の濃厚な風味が広がります。味付けにはフランス・ブルターニュ地方産の自然結晶海塩（ゲランドの塩）と、自家製の乾燥ローズマリーを微量にブレンドしており、珈琲の余韻を邪魔しない素朴で上品な塩味をお楽しみいただけます。
+            </p>
+          </div>
+
+        </section>
+      </div>
+    </div>
+
+    <!-- ================= 3. アクセス専用ページ ================= -->
+    <div id="page-access" class="view-page">
+      <div class="subpage-container">
+        <aside>
+          <h2>店舗所在地・交通案内</h2>
+          <p style="font-size: 9.5px; color: #737b87;">
+            当館は周辺環境の静粛性を維持するため、地上に看板や案内灯を設置しておりません。地下階への石造階段を降下した先が入り口となります。
+          </p>
+          <div style="margin-top: 15px; border-top: 1px dashed #282a2f; padding-top: 10px;">
+            <p style="font-size: 9px; color: #616773; margin-bottom: 4px;"><strong>緯度経度座標:</strong></p>
+            <p style="font-size: 9px; color: #787f8b; font-family: monospace; margin: 0;">35°10'48.2"N 136°53'14.6"E</p>
+          </div>
+        </aside>
+        <section class="subpage-main">
+          <h2>GEOGRAPHIC CARTOGRAPHY (ACCESS)</h2>
+          
+          <!-- 架空の案内地図 (インラインSVG) -->
+          <div style="width: 100%; background: #131416; border: 1px solid #282a2f; margin: 10px 0 16px 0; padding: 10px; box-sizing: border-box; text-align: center;">
+            <svg viewBox="0 0 500 200" style="width: 100%; height: auto; max-height: 180px; display: block; margin: 0 auto;" xmlns="http://www.w3.org/2000/svg">
+              <!-- 背景格子 -->
+              <defs>
+                <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                  <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1c1d22" stroke-width="0.8"/>
+                </pattern>
+              </defs>
+              <rect width="500" height="200" fill="url(#grid)" />
+
+              <!-- 道路網 -->
+              <!-- メイン大通り（水平） -->
+              <line x1="20" y1="130" x2="480" y2="130" stroke="#252830" stroke-width="16" stroke-linecap="round" />
+              <line x1="20" y1="130" x2="480" y2="130" stroke="#323640" stroke-width="1" stroke-dasharray="6,4" />
+              <text x="240" y="146" fill="#4f5561" font-size="9" font-family="sans-serif" text-anchor="middle">中央通り (Ave. Centrale)</text>
+
+              <!-- 脇道（垂直） -->
+              <line x1="380" y1="20" x2="380" y2="180" stroke="#22252c" stroke-width="10" />
+              <text x="395" y="60" fill="#4f5561" font-size="8" font-family="sans-serif">水路沿い裏路地</text>
+
+              <!-- 駅エリア（左側） -->
+              <rect x="40" y="105" width="90" height="50" fill="#1b1c20" stroke="#414754" stroke-width="1.2" rx="2" />
+              <text x="85" y="127" fill="#a4abb8" font-size="10" font-weight="bold" font-family="sans-serif" text-anchor="middle">深藍駅</text>
+              <text x="85" y="142" fill="#656c78" font-size="8" font-family="sans-serif" text-anchor="middle">東口 3番出口</text>
+
+              <!-- ルート線（点線矢印風） -->
+              <path d="M 130 130 L 380 130 L 380 65" fill="none" stroke="#687282" stroke-width="1.8" stroke-dasharray="4,3" />
+
+              <!-- 店舗ピン（右上） -->
+              <circle cx="380" cy="55" r="7" fill="#2d323c" stroke="#8a94a5" stroke-width="1.5" />
+              <circle cx="380" cy="55" r="2.5" fill="#c2c9d6" />
+              <rect x="300" y="32" width="160" height="18" fill="#141518" stroke="#383d47" stroke-width="0.8" rx="2" />
+              <text x="380" y="44" fill="#bcc4d1" font-size="8.5" font-weight="bold" font-family="sans-serif" text-anchor="middle">CAFÉ DE L'OBSCURITÉ [B2F]</text>
+            </svg>
+            <div style="font-size: 8.5px; color: #555b66; margin-top: 4px; letter-spacing: 0.5px;">
+              [ Fig 4. Cartographic Navigation Vector — 深藍駅周辺地下配意図 ]
+            </div>
+          </div>
+
+          <!-- 住所・アクセス詳細テキスト -->
+          <div style="margin-bottom: 15px;">
+            <p style="margin-bottom: 4px;">
+              <strong style="color: #a6afbc;">【所在地 / Physical Address】</strong><br>
+              〒194-0822<br>
+              東京都深藍区水門町四丁目12番8号 霧生ビルディング 地下2階<br>
+              <span style="font-size: 9.5px; color: #69707c;">(B2F Kiryu Bldg., 4-12-8 Suimon-cho, Shin'ai-ku, Tokyo 194-0822)</span>
+            </p>
+          </div>
+
+          <div style="margin-bottom: 15px;">
+            <p style="margin-bottom: 4px;">
+              <strong style="color: #a6afbc;">【最寄り駅からの道順 / Transit Directions】</strong><br>
+              <strong>帝都高速鉄道 青藍線「深藍（しんあい）駅」東口 3番出口より 徒歩10分</strong>
+            </p>
+            <p style="font-size: 9.5px; color: #787f8b; line-height: 1.6;">
+              1. 深藍駅の改札を出て東口3番出口（階段）より地上へ上がります。<br>
+              2. そのまま「中央通り」を直進し、2つ目の信号機（水門前交差点）を越えてさらに200mほど歩行を進めてください。<br>
+              3. 左手に見える赤煉瓦造りの古書店を過ぎてすぐの細い路地（水路沿い裏路地）を左折します。<br>
+              4. 40mほど進んだ右手、黒い鉄製扉が目印の「霧生ビルディング」の脇にある下り外階段より地下2階へお降りください。真鍮製の小さな銘板が扉の横に掲げられております。
+            </p>
+          </div>
+
+          <div>
+            <p style="margin-bottom: 4px;">
+              <strong style="color: #a6afbc;">【補足注意事項】</strong>
+            </p>
+            <p style="font-size: 9.5px; color: #787f8b; line-height: 1.6;">
+              ※当館専用の駐車場および駐輪場はございません。公共交通機関をご利用のうえご来館ください。<br>
+              ※地下階のため電波が届きにくい場合がございます。あらかじめ地図をご確認の上お越しいただくことを推奨いたします。
+            </p>
+          </div>
+
+        </section>
+      </div>
+    </div>
+
+    <!-- ================= 4. グッズ専用ページ ================= -->
+    <div id="page-goods" class="view-page">
+      <div class="subpage-container">
+        <aside>
+          <h2>物販・所蔵品目録</h2>
+          <p style="font-size: 9.5px; color: #737b87;">
+            当館の珈琲哲学をご自宅でも再現していただくための自家焙煎豆、ならびに手仕事による器や焼き菓子をご用意しております。すべての品は品質保持と鮮度管理のため、少量ずつの限定生産となっております。
+          </p>
+          <div style="margin-top: 15px; border-top: 1px dashed #282a2f; padding-top: 10px;">
+            <p style="font-size: 9px; color: #616773; margin-bottom: 4px;"><strong>お渡し形式:</strong></p>
+            <p style="font-size: 9px; color: #787f8b; line-height: 1.5; margin: 0;">
+              店頭でのお持ち帰りのほか、密閉アルミ包装による全国配送も承っております。ご希望の際は店頭受付までお申し付けください。
+            </p>
+          </div>
+        </aside>
+        <section class="subpage-main">
+          <h2>MATERIAL ARTIFACTS & GOODS（所蔵品・物販一覧）</h2>
+
+          <!-- 1. コーヒー豆 -->
+          <div class="menu-item">
+            <div class="menu-header">
+              <span class="menu-name">コーヒー豆（オリジナル深煎り銘柄 / 150g袋）</span>
+              <span class="menu-price">1000円</span>
+            </div>
+            <p class="menu-desc">
+              当館の象徴である鋳鉄製ドラム焙煎機にて、間接熱のみを用いて極めて緩慢に芯まで火を通した自家焙煎珈琲豆です。標高1,850m以上の高地で有機栽培されたティピカ種を主軸に、焙煎直後から炭酸ガスを適度に放出しながら熟成するよう設計された特殊なアロマブレスパックに封入してお渡しいたします。挽いた瞬間から立ち上るビターチョコと湿った杉木のような深遠なアロマ、そしてドリップ時に現れるカラメル化された重厚な甘みが特徴です。豆のままのお渡しのほか、ご自宅の抽出器具（ペーパー・ネル・エスプレッソ等）に合わせたメッシュ調整粉砕も無償で承ります。
+            </p>
+          </div>
+
+          <!-- 2. コーヒーカップ -->
+          <div class="menu-item">
+            <div class="menu-header">
+              <span class="menu-name">オリジナル陶製コーヒーカップ</span>
+              <span class="menu-price">1300円</span>
+            </div>
+            <p class="menu-desc">
+              当館の地下空間に漂う鈍い光と陰影を器として具現化するため、地元の窯元に特注制作を依頼した信楽の粗土によるオリジナル珈琲碗です。表面には鉄分を多く含んだマットな黒褐色の釉薬を手作業で施しており、焼成時の窯変によって一点一点異なるかすかな銀白色の結晶が浮かび上がります。珈琲の液温が急激に低下しないよう縁を適度に厚口に仕上げつつ、唇が触れた際の感触は滑らかに研磨されています。手に取った瞬間の確かな重量感と土の素朴な温もりが、日常の喫茶時間に深い静寂と落ち着きをもたらします。
+            </p>
+          </div>
+
+          <!-- 3. フィナンシェ -->
+          <div class="menu-item">
+            <div class="menu-header">
+              <span class="menu-name">焦がし発酵バターのフィナンシェ</span>
+              <span class="menu-price">200円</span>
+            </div>
+            <p class="menu-desc">
+              北海道産の発酵バターを小鍋で限界まで熱し、ヘーゼルナッツ色になるまで香ばしさを凝縮させたブール・ノワゼット（焦がしバター）をふんだんに使用した伝統的フランス焼き菓子です。カリフォルニア産アーモンドパウダーと少量のヘーゼルナッツ粉を独自の比率でブレンドし、高温短時間で焼き上げることで、外側の角はカリッと香ばしく、内側はしっとりと芳醇なバターの油分を含んだ濃密な食感を実現しました。深煎り珈琲の強い苦味と合わせることで、口内でバターの油脂分が滑らかに溶け合い、豊かな甘みの相乗効果を生み出します。
+            </p>
+          </div>
+
+          <!-- 4. マドレーヌ -->
+          <div class="menu-item">
+            <div class="menu-header">
+              <span class="menu-name">クラシック・シェルマドレーヌ</span>
+              <span class="menu-price">250円</span>
+            </div>
+            <p class="menu-desc">
+              貝殻の形に焼き上げた、古き良きフランス家庭菓子の素朴な温もりを宿した一品です。契約農家から届く新鮮な卵と国産小麦粉を用い、低温で一晩じっくり生地を寝かせて気泡を安定させることで、中心がぷっくりと膨らんだ美しいへそを持つふっくらとした質感に仕上げました。隠し味として無農薬レモンの果皮を手作業で削り落としたゼストと、かすかな百花蜜を練り込んでおり、一口かじると優しいバターの風味の奥から爽快な柑橘の清涼感がふわりと広がります。中煎り珈琲やカフェモカのお供に最適な焼き菓子です。
+            </p>
+          </div>
+
+          <!-- 5. ジャム -->
+          <div class="menu-item">
+            <div class="menu-header">
+              <span class="menu-name">自家炊き果実のコンフィチュール（ジャム / 120g瓶）</span>
+              <span class="menu-price">730円</span>
+            </div>
+            <p class="menu-desc">
+              銅鍋を用いて強火で短時間に煮詰める伝統的な製法で仕上げた、保存料・ペクチン無添加の自家製ジャムです。季節ごとに最も糖度と香りが乗った旬の完熟果実（ダークチェリー、カシス、黒無花果など）を厳選し、甜菜糖の優しい甘みとともに果肉の原型をあえて適度に残すプレザーブスタイルで炊き上げております。果実本来の鮮烈な酸味と凝縮された果汁のコクが凝縮されており、パンやスコーンに塗るだけでなく、当館のシフォンケーキに添えたり、エスプレッソを飲み終えた後の舌直しとしても格別の調和を見せます。
+            </p>
+          </div>
+
+        </section>
+      </div>
+    </div>
+
+    <!-- ================= 5. お知らせ専用ページ ================= -->
+    <div id="page-news" class="view-page">
+      <div class="subpage-container">
+        <aside>
+          <h2>通達・記録公報</h2>
+          <p style="font-size: 9.5px; color: #737b87;">
+            館内の運用規程変更、季節に伴う抽出資材・限定菓子の配給予定、ならびに原材料調達に伴う価格改定に関する公式記録を時系列にて公示いたします。
+          </p>
+          <div style="margin-top: 15px; border-top: 1px dashed #282a2f; padding-top: 10px;">
+            <p style="font-size: 9px; color: #616773; margin-bottom: 4px;"><strong>最新更新日時:</strong></p>
+            <p style="font-size: 9px; color: #787f8b; font-family: monospace; margin: 0;">2026.09.01 / ARCHIVE VER 2.1</p>
+          </div>
+        </aside>
+        <section class="subpage-main">
+          <h2>ARCHIVAL BULLETINS（お知らせ・公式通達一覧）</h2>
+
+          <!-- お知らせ1：秋の季節限定メニュー（スイーツ） -->
+          <div class="menu-item" style="border-bottom: 1px dashed #282a2f; padding-bottom: 16px; margin-bottom: 20px;">
+            <div class="menu-header">
+              <span class="menu-name">【季節限定】秋季特別甘味「燻煙和栗とダークラムのモンブラン」提供予告</span>
+              <span class="menu-price" style="font-size: 9.5px; color: #6f7682;">2026.09.01 告知</span>
+            </div>
+            <p class="menu-desc" style="margin-top: 6px;">
+              日頃よりCAFÉ DE L'OBSCURITÉの静寂をご愛顧いただき誠にありがとうございます。当館では秋の気圧変動と気温低下に合わせ、深煎り珈琲の苦味と油分に最も寄り添う季節限定デセールとして「燻煙和栗とダークラムのモンブラン」の提供を10月上旬より開始いたします。
+            </p>
+            <p class="menu-desc">
+              本品は、熊本県産の銀寄栗を渋皮ごと蒸し上げたのち、珈琲の焙煎時と同等の低温燻煙をわずかに施すことで野性味ある燻香を付与した特製ペーストを主軸としております。内部にはジャマイカ産オールドラム酒「マイヤーズ」をふんだんに含ませたしっとりとしたカカオスポンジと、無加糖の純生クリームを忍ばせ、土台には砕いた自家製ヘーゼルナッツメレンゲを敷き詰めました。栗本来の力強い甘みとラム酒の芳醇な酒精、そしてサクサクとしたメレンゲの鉱物的なテクスチャが、当館の「オリジナルブレンド」や「エスプレッソ」の重厚な余韻と比類なき調和を見せます。
+            </p>
+            <p class="menu-desc" style="font-size: 9px; color: #666c77;">
+              ※手作業による微細な裏ごし工程と品質保持の観点から、1日の仕込み数は12食限定とさせていただきます。提供価格は単品1,100円（珈琲セット1,700円）を予定しております。詳細な提供開始日につきましては、確定次第館内掲示にてご案内申し上げます。
+            </p>
+          </div>
+
+          <!-- お知らせ2：オリジナルブレンド価格改定 -->
+          <div class="menu-item" style="border-bottom: 1px dashed #282a2f; padding-bottom: 16px; margin-bottom: 20px;">
+            <div class="menu-header">
+              <span class="menu-name">【重要】基幹銘柄「オリジナルブレンド」価格改定に関するお知らせ</span>
+              <span class="menu-price" style="font-size: 9.5px; color: #6f7682;">2026.08.20 告知</span>
+            </div>
+            <p class="menu-desc" style="margin-top: 6px;">
+              平素は格別のお引き立てを賜り、厚く御礼申し上げます。当館におきまして創業以来の看板銘柄として多くの方にご愛飲いただいております「オリジナルブレンド」につきまして、2026年10月1日より提供価格を改定させていただく運びとなりましたので、その背景と経緯をご報告申し上げます。
+            </p>
+            <p class="menu-desc">
+              現在、気候変動に伴う中南米およびアフリカ高地における干魃・病害の頻発により、当ブレンドの根幹を担うグアテマラ・アンティグア産ブルボン原種およびエチオピア原種豆の国際取引価格が高騰を続けております。さらに、海上輸送運賃の継続的上昇、ならびに当館独自の1968年製鋳鉄焙煎機を維持するための特殊燃料費や保守資材の調達コストが著しく増大しております。
+            </p>
+            <p class="menu-desc">
+              当館といたしましても、豆の選別の厳格化や抽出効率の精査など可能な限りの内部努力を重ねてまいりましたが、一切の品質妥協を許さず、これまで通りの濃厚なコクと滑らかなネルドリップの質感を保持し続けるためには、自助努力のみでの価格維持が困難な状況に至りました。つきましては、誠に不本意ではございますが、下記の通り提供価格を改定いたします。
+            </p>
+            <p class="menu-desc" style="background-color: #161719; border: 1px solid #26282d; padding: 8px 10px; margin: 8px 0;">
+              <strong>■ 対象品目：</strong>オリジナルブレンド（ホット / ネルドリップ抽出）<br>
+              <strong>■ 改定時期：</strong>2026年10月1日（木）開館時間より<br>
+              <strong>■ 改定価格：</strong>現行 700円（税込） → <strong>改定後 800円（税込）</strong>
+            </p>
+            <p class="menu-desc">
+              ご利用の皆様にはご負担をおかけすることとなり甚だ心苦しい限りではございますが、今後とも一杯の珈琲がもたらす孤高の静寂と、最高峰の抽出品質を一切の妥協なくお届けできるよう精進してまいります。何卒諸般の事情をご賢察の上、深いご理解を賜りますよう伏してお願い申し上げます。
+            </p>
+          </div>
+
+        </section>
+      </div>
+    </div>
+
+    <!-- ================= 6. 予約専用ページ ================= -->
+    <div id="page-reservation" class="view-page">
+      <div class="subpage-container">
+        <aside>
+          <h2>座席配当・事前予約規定</h2>
+          <p style="font-size: 9.5px; color: #737b87;">
+            当館は限られた空間容積の中で光と音響の静寂を保つため、完全座席割定制を採用しております。滞在中の心地よい孤立と抽出の質を確保するため、事前の規程確認にご協力をお願いいたします。
+          </p>
+          <div style="margin-top: 15px; border-top: 1px dashed #282a2f; padding-top: 10px;">
+            <p style="font-size: 9px; color: #616773; margin-bottom: 4px;"><strong>受付窓口:</strong></p>
+            <p style="font-size: 9px; color: #787f8b; line-height: 1.5; margin: 0;">
+              専任係員による音声対話窓口（有線電話回線）のみにて承ります。通信障害防止のため電子予約システムは常時遮断されております。
+            </p>
+          </div>
+        </aside>
+        <section class="subpage-main">
+          <h2>CHRONOLOGICAL ADMISSION & PROTOCOL（ご予約のご案内と遵守事項）</h2>
+
+          <div style="margin-bottom: 18px;">
+            <p style="margin-bottom: 6px;">
+              <strong style="color: #a6afbc;">【ご予約方法に関する重要なお知らせ：電話受付限定】</strong>
+            </p>
+            <p class="menu-desc">
+              CAFÉ DE L'OBSCURITÉ では、静寂な空間設計と一杯ごとの緻密な温度・湿度管理を徹底するため、電子メールや各種ウェブフォーム、SNS等のデジタルプラットフォームによる自動受付を一切行っておりません。お客様一人ひとりの滞在目的や抽出スケジュールの綿密な調整を直接行うため、<strong>事前のご予約はすべて「店舗へのお電話」のみ</strong>にて承っております。
+            </p>
+          </div>
+
+          <div style="margin-bottom: 18px; background-color: #161719; border: 1px solid #282a2f; padding: 12px 14px;">
+            <p style="margin-bottom: 6px;">
+              <strong style="color: #bcc4d1;">【お電話にてお伝えいただく必須情報】</strong>
+            </p>
+            <p class="menu-desc" style="color: #8c93a1; margin-bottom: 8px;">
+              受話器をお取りいただき、係員が応答いたしましたら、以下の3点を順にお申し付けください。事前の豆の計量および焼き菓子の仕込み工程に直結するため、<strong>ご予約時点でお召し上がりになる品目（注文内容）の決定が必須</strong>となります。
+            </p>
+            <p class="menu-desc" style="line-height: 1.6;">
+              <strong>1. ご希望の日時：</strong>ご来店希望日および開始時間（開館時間 11:00〜20:00 の間にてご指定ください）<br>
+              <strong>2. ご予約代表者氏名：</strong>フルネーム（漢字表記およびカナ表記の確認を行わせていただきます）<br>
+              <strong>3. 事前注文内容：</strong>当館お品書きより、お召し上がりになる珈琲銘柄・甘味・軽食のすべての品目と数量
+            </p>
+          </div>
+
+          <div style="margin-bottom: 18px;">
+            <p style="margin-bottom: 4px;">
+              <strong style="color: #a6afbc;">【予約専用電話回線・受付時間】</strong>
+            </p>
+            <p style="font-size: 13px; color: #bcc4d1; font-family: monospace; letter-spacing: 1px; margin: 4px 0 8px 0;">
+              TEL: 03-7194-0822
+            </p>
+            <p class="menu-desc">
+              <strong>受付時間：営業日 10:00 〜 11:00 / 19:30 〜 20:30</strong><br>
+              ※営業時間中の日中は豆の選別およびハンドドリップ抽出に専任の者が従事しているため、受話器に出られない場合がございます。極力上記の受付推奨時間帯にお架けいただきますようお願い申し上げます。
+            </p>
+          </div>
+
+          <div>
+            <p style="margin-bottom: 4px;">
+              <strong style="color: #a6afbc;">【ご予約に関する留意事項】</strong>
+            </p>
+            <p class="menu-desc" style="line-height: 1.6;">
+              ・注文内容の変更やお時間の調整は、仕込みの都合上、ご予約日の前日20時までにお電話にてお知らせください。<br>
+              ・座席の確保時間はご予約時間から90分間と定めております。遅れてご到着された場合でも退店時間の延長は致しかねますのでご了承ください。<br>
+              ・館内の光量を制限している特性上、1グループあたり原則2名様までのご案内とさせていただいております。
+            </p>
+          </div>
+
+        </section>
+      </div>
+    </div>
+
+    <!-- 共通フッター -->
+    <footer>
+      <p>
+        All proprietary rights reserved. CAFÉ DE L'OBSCURITÉ corporate registry 2011-2026. Published documentation regarding beans, extraction methodologies, and pricing indices is preserved within archival records.
+        If you are an auditor or patron seeking pricing indices, you may inspect the registry:
+        <button class="action-btn" style="margin: 2px 2px;" onclick="switchPage('menu')">
+          View Menu Matrix [Menu]
+        </button>
+        or proceed towards regional geographic directions:
+        <button class="action-btn" style="margin: 2px 2px;" onclick="switchPage('access')">
+          Cartography / 店舗所在地 [Access]
+        </button>.
+        Standard operations occur between 11:00 and 20:00 JST.
+        <span id="return-link-wrapper" style="display:none; margin-left: 8px;">
+          | Return:
+          <button class="action-btn" onclick="switchPage('home')">Back to Home Portal</button>
+        </span>
+      </p>
+    </footer>
+
+  </div>
+
+  <script>
+    // 自動フェードアウト
+    window.addEventListener('DOMContentLoaded', () => {
+      const overlay = document.getElementById('overlay');
+      setTimeout(() => {
+        overlay.classList.add('fade-out');
+        setTimeout(() => {
+          overlay.style.display = 'none';
+        }, 1200);
+      }, 2500);
+    });
+
+    // 画面切り替え関数
+    function switchPage(pageId) {
+      const pages = document.querySelectorAll('.view-page');
+      pages.forEach(p => p.classList.remove('active'));
+
+      const target = document.getElementById('page-' + pageId);
+      if (target) {
+        target.classList.add('active');
+      }
+
+      // ホーム以外にいる時はフッターに戻るボタンを表示
+      const returnWrapper = document.getElementById('return-link-wrapper');
+      if (pageId === 'home') {
+        returnWrapper.style.display = 'none';
+      } else {
+        returnWrapper.style.display = 'inline';
+      }
+
+      window.scrollTo(0, 0);
+    }
+  </script>
+</body>
+</html>
