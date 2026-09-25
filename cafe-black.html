@@ -213,27 +213,35 @@
       text-align: justify;
     }
 
-    /* 枠線付きボタン */
+   /* 【変更後】存在がはっきり分かり、1単語が目立つボタンスタイル */
     .action-btn {
       display: inline-block;
-      padding: 3px 7px;
-      font-size: 10px;
-      font-family: inherit;
-      color: #9ea6b3;
-      background-color: #202226;
-      border: 1px solid #3c414a;
-      border-radius: 3px;
+      padding: 5px 12px;
+      font-size: 11px;
+      font-weight: bold;
+      letter-spacing: 1.2px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #d2d8e4;
+      background: linear-gradient(180deg, #2a2e36 0%, #1e2025 100%);
+      border: 1.5px solid #5a6373;
+      border-radius: 4px;
       text-decoration: none;
       cursor: pointer;
       line-height: 1.2;
       vertical-align: middle;
-      transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+      transition: all 0.2s ease;
     }
 
     .action-btn:hover {
-      background-color: #2b2e34;
-      border-color: #585f6c;
-      color: #d8deea;
+      background: linear-gradient(180deg, #383e4a 0%, #292d35 100%);
+      border-color: #8c99b0;
+      color: #ffffff;
+      box-shadow: 0 0 8px rgba(140, 153, 176, 0.4);
+    }
+
+    .action-btn:active {
+      transform: translateY(1px);
     }
 
     /* フッター */
@@ -285,7 +293,7 @@
         <div class="sub-title" id="header-status">
           <span>STATUS: LIVE</span>
           <!-- 【枠線ボタン1：お知らせ】 -->
-          <button class="action-btn" onclick="switchPage('news')">Notice Bulletins [News]</button>
+         <button class="action-btn" onclick="switchPage('news')">NEWS</button>
         </div>
       </div>
     </header>
@@ -306,8 +314,8 @@
           </p>
           <p>
             Over the past fifteen years, our space has served as an acoustic refuge for authors, philosophers, and architectural designers seeking intense focus amidst absolute darkness. To protect this fragile auditory silence, our private chambers operate on an advance schedule.
-            <button class="action-btn" style="margin: 4px 0;" onclick="switchPage('reservation')">
-              Chamber Protocol [Reservation]
+            <button class="action-btn" style="margin: 6px 0;" onclick="switchPage('reservation')">
+            RESERVATION
             </button>
             remains mandatory for all afternoon table allocations.
           </p>
@@ -355,9 +363,9 @@
           </p>
           <p>
             Our seasonal single-origin beans and roasting utensils are indexed under
-            <button class="action-btn" style="margin: 4px 0;" onclick="switchPage('goods')">
-              Artifacts Registry [Goods]
-            </button>.
+            <button class="action-btn" style="margin: 6px 0;" onclick="switchPage('goods')">
+              GOODS
+            </button>
           </p>
         </aside>
 
@@ -796,18 +804,13 @@
       <p>
         All proprietary rights reserved. CAFÉ DE L'OBSCURITÉ corporate registry 2011-2026. Published documentation regarding beans, extraction methodologies, and pricing indices is preserved within archival records.
         If you are an auditor or patron seeking pricing indices, you may inspect the registry:
-        <button class="action-btn" style="margin: 2px 2px;" onclick="switchPage('menu')">
-          View Menu Matrix [Menu]
-        </button>
+        <button class="action-btn" style="margin: 2px 4px;" onclick="switchPage('menu')">MENU</button>
         or proceed towards regional geographic directions:
-        <button class="action-btn" style="margin: 2px 2px;" onclick="switchPage('access')">
-          Cartography / 店舗所在地 [Access]
-        </button>.
+        <button class="action-btn" style="margin: 2px 4px;" onclick="switchPage('access')">ACCESS</button>
         Standard operations occur between 11:00 and 20:00 JST.
         <span id="return-link-wrapper" style="display:none; margin-left: 8px;">
           | Return:
-          <button class="action-btn" onclick="switchPage('home')">Back to Home Portal</button>
-        </span>
+        <button class="action-btn" style="font-size: 10px; padding: 3px 8px;" onclick="switchPage('home')">HOME</button>  
       </p>
     </footer>
 
